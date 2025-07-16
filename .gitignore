@@ -1,0 +1,5 @@
+# OpenTofu/Terraform
+.terraform
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
