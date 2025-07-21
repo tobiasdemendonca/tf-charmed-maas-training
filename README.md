@@ -22,10 +22,13 @@ Before beginning the deployment process, please make sure that [prerequisites](#
 # Create a trust token to your LXD server/cluster
 lxc config trust add --name anvil-training
 
+# View the created token, required for the juju-bootstrap config.
+lxc config trust list-tokens
+
 # (optional) - create an LXD project to isolate training resources
 lxc project create anvil-training
 # Copy at least the default profile of default project and modify accordingly, if needed
-lxc profile copy default default --target-project anvil-training
+lxc profile copy default default --target-project anvil-training --refresh
 
 # copy sample config and modify the contents as needed
 cp config/juju-bootstrap/config.tfvars.sample config/juju-bootstrap/config.tfvars
@@ -177,3 +180,21 @@ The Terraform modules also expect that network connectivity is established from 
 - deployed MAAS
 
 It is recommended to create a jumphost / bastion LXD container on the LXD cluster/server, install prerequisites, git clone this repo and apply the modules from there.
+
+> [!NOTE]
+> If you are on a corporate laptop, you may encounter a timeout error when attempting to bootstrap the JuJu controller:
+> ```bash
+> ❯ juju bootstrap localhost another-cloud
+> Creating Juju controller "another-cloud" on localhost/localhost
+> Looking for packaged Juju agent version 3.6.8 for amd64
+> Located Juju agent version 3.6.8-ubuntu-amd64 at https://streams.canonical.com/juju/tools/agent/3.6.8/juju-3.6.8-linux-amd64.tgz
+> To configure your system to better support LXD containers, please see: https://documentation.ubuntu.com/lxd/en/latest/explanation/performance_tuning/
+> Launching controller instance(s) on localhost/localhost...
+>  - juju-e91972-0 (arch=amd64)
+> Installing Juju agent on bootstrap instance
+> Waiting for address
+> Attempting to connect to 10.237.137.63:22
+> Attempting to connect to [fd42:9449:3029:99ca:216:3eff:fea4:f64d]:22
+> <will eventually timeout>
+> ```
+> For now, creating a new user fixes this issue. We are still investigating why this occurs.
