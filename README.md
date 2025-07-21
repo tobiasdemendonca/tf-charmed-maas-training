@@ -14,6 +14,8 @@ The full deployment consists of 3 individual Terraform modules that should be ru
 
 ## Instructions
 
+Before beginning the deployment process, please make sure that [prerequisites](#appendix---prerequisites) are met.
+
 ### Bootstrap Juju with juju-bootstrap Terraform
 
 ```bash
@@ -160,3 +162,18 @@ At this point all modules have been applied. The practitioner is aware of:
 - MAAS admin API key
 
 The above combination allows the practitioner to access charmed MAAS UI from their browser or configure their MAAS CLI to access MAAS.
+
+## Appendix - Prerequisites
+
+To run the Terraform modules, the following software must be installed in the local system:
+
+- Juju 3.6 LTS `snap install juju --channel 3.6/stable`
+- OpenTofu/Terraform
+
+The Terraform modules also expect that network connectivity is established from local system to:
+
+- LXD cluster/server where Juju will be bootstrapped and MAAS will be deployed
+- bootstrapped Juju controller
+- deployed MAAS
+
+It is recommended to create a jumphost / bastion LXD container on the LXD cluster/server, install prerequisites, git clone this repo and apply the modules from there.
