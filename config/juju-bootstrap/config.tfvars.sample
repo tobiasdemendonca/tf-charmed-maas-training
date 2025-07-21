@@ -1,8 +1,8 @@
 # The cloud name that Juju should use to refer to the LXD in use
-cloud_name = "foobar"
+cloud_name = "anvil-training"
 # The API endpoint URL that Juju should use to communicate to LXD
 lxd_address = "https://127.0.0.1:8443"
 # The LXD project that Juju should use to place the controller resources
-lxd_project = "default"
+lxd_project = "anvil-training"
 # The LXD trust token that Juju should use to authenticate to LXD
-lxd_trust_token = "foo"
+lxd_trust_token = "1234lkjh..."

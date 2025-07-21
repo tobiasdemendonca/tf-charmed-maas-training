@@ -197,4 +197,4 @@ It is recommended to create a jumphost / bastion LXD container on the LXD cluste
 > Attempting to connect to [fd42:9449:3029:99ca:216:3eff:fea4:f64d]:22
 > <will eventually timeout>
 > ```
-> For now, creating a new user fixes this issue. We are still investigating why this occurs.
+> For now, creating a new user and running the setup there fixes this issue. We are still investigating why this occurs.
