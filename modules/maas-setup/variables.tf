@@ -9,6 +9,18 @@ variable "juju_cloud_name" {
   type        = string
 }
 
+variable "maas_constraints" {
+  description = "The constraints for the MAAS virtual machines"
+  type        = string
+  default = "cores=2 mem=4G virt-type=virtual-machine"
+}
+
+variable "postgres_constraints" {
+  description = "The constraints for the Postgres virtual machines"
+  type        = string
+  default = "cores=2 mem=4G virt-type=virtual-machine"
+}
+
 variable "enable_postgres_ha" {
   description = "Whether to enable PostgreSQL HA"
   type        = bool

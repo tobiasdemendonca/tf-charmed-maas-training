@@ -16,7 +16,7 @@ resource "juju_machine" "postgres_machines" {
   model       = juju_model.maas_model.name
   base        = "ubuntu@${var.ubuntu_version}"
   name        = "postgres-${count.index}"
-  constraints = "cores=2 mem=4G virt-type=virtual-machine"
+  constraints = var.postgres_constraints
 }
 
 resource "juju_machine" "maas_machines" {
@@ -24,7 +24,7 @@ resource "juju_machine" "maas_machines" {
   model       = juju_model.maas_model.name
   base        = "ubuntu@${var.ubuntu_version}"
   name        = "maas-${count.index}"
-  constraints = "cores=2 mem=4G virt-type=virtual-machine"
+  constraints = var.maas_constraints
 }
 
 resource "juju_application" "postgresql" {

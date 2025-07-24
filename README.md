@@ -112,6 +112,9 @@ Despite the issues there is a way to achieve the MAAS HA region+rack by doing th
     terraform apply -var-file ../../config/maas-setup/config.tfvars -auto-approve
     ```
 
+> [!NOTE]
+> To run MAAS and/or Postgres in HA mode, the default memory constraints require your host to have at least 32GB RAM. If you wish to reduce this, adjust the VM constraints variables in your `maas-setup/config.tfvars` file.
+
 ##### Troubleshooting HA mode
 
 >**NOTE:** In case any of the MAAS snaps is not configure at any point, we can `juju ssh` to its machine and manually run maas init as a workaround
