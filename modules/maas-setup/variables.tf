@@ -67,7 +67,9 @@ variable "max_connections" {
 }
 
 variable "max_connections_per_region" {
-  description = "Maximum number of concurrent connections to allow to the database server per region"
+  description = <<EOF
+    Maximum number of concurrent connections to allow to the database server per region
+  EOF
   type        = number
   default     = 50
 }
@@ -146,7 +148,70 @@ variable "admin_email" {
 }
 
 variable "admin_ssh_import" {
-  description = "The MAAS admin SSH key source. Valid sources include 'lp' for Launchpad and 'gh' for GitHub. E.g. 'lp:my_launchpad_username'."
+  description = <<EOF
+    The MAAS admin SSH key source. Valid sources include 'lp' for Launchpad and 'gh' for GitHub.
+    E.g. 'lp:my_launchpad_username'.
+  EOF
   type        = string
   default     = ""
+}
+
+###
+## Backup configuration
+###
+
+variable "enable_backup" {
+  description = "Whether to enable backup for MAAS and PostgreSQL"
+  type        = bool
+  default     = false
+}
+
+variable "charm_s3_integrator_channel" {
+  description = "Operator channel for S3 Integrator deployment"
+  type        = string
+  default     = "1/stable"
+}
+
+variable "charm_s3_integrator_revision" {
+  description = "Operator channel revision for S3 Integrator deployment"
+  type        = number
+  default     = null
+}
+
+variable "charm_s3_integrator_config" {
+  description = <<EOF
+    Operator config for S3 Integrator deployment. Configuration for `bucket` and `tls-ca-chain` is
+    skipped even if set, since it is handled by different Terraform variables.
+  EOF
+  type        = map(string)
+  default     = {}
+}
+
+variable "s3_ca_chain_file_path" {
+  description = "The file path of the S3 CA chain, used for HTTPS validation"
+  type        = string
+  default     = ""
+}
+
+variable "s3_access_key" {
+  description = "Access key used to access the S3 backup bucket"
+  type        = string
+}
+
+variable "s3_secret_key" {
+  description = "Secret key used to access the S3 backup bucket"
+  type        = string
+  sensitive   = true
+}
+
+variable "s3_bucket_postgresql" {
+  description = "Bucket name to store PostgreSQL backups in"
+  type        = string
+  default     = "postgresql"
+}
+
+variable "s3_bucket_maas" {
+  description = "Bucket name to store MAAS backups in"
+  type        = string
+  default     = "maas"
 }
