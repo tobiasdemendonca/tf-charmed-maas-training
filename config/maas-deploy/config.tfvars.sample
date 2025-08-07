@@ -10,7 +10,7 @@ enable_maas_ha = false
 lxd_project = "default"
 
 # The constraints used for VMs
-maas_constraints = "cores=2 mem=4G virt-type=virtual-machine"
+maas_constraints     = "cores=2 mem=4G virt-type=virtual-machine"
 postgres_constraints = "cores=2 mem=4G virt-type=virtual-machine"
 
 
@@ -35,9 +35,7 @@ charm_postgresql_config = {
 ###
 
 # Operator channel for MAAS Region Controller deployment
-# NOTE:
-#   Until MAAS 3.6.1 is released, this is required
-charm_maas_region_channel = "latest/edge/36-edge"
+charm_maas_region_channel = "latest/edge"
 # Operator channel revision for MAAS Region Controller deployment
 charm_maas_region_revision = null
 # Operator config for MAAS Region Controller deployment
@@ -53,9 +51,7 @@ charm_maas_region_config = {}
 #   units to achieve region+rack mode
 enable_rack_mode = false
 # Operator channel for MAAS Agent Controller deployment
-# NOTE:
-#   Until MAAS 3.6.1 is released, this is required
-charm_maas_agent_channel = "latest/edge/36-edge"
+charm_maas_agent_channel = "latest/edge"
 # Operator channel revision for MAAS Agent Controller deployment
 charm_maas_agent_revision = null
 # Operator config for MAAS Agent Controller deployment
