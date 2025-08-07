@@ -9,8 +9,8 @@ This repository is created for conducting a charmed MAAS training during Berlin 
 The full deployment consists of 3 individual Terraform modules that should be run in order:
 
 - [juju-bootstrap](./modules/juju-bootstrap) - Bootstraps Juju at an LXD server or cluster
-- [maas-setup](./modules/maas-setup) - Deploys charmed MAAS at a Juju model of the Juju controller of `juju-bootstrap`
-- [maas-config](./modules/maas-config) - Configures the charmed MAAS deployed by `maas-setup`
+- [maas-deploy](./modules/maas-deploy) - Deploys charmed MAAS at a Juju model of the Juju controller of `juju-bootstrap`
+- [maas-config](./modules/maas-config) - Configures the charmed MAAS deployed by `maas-deploy`
 
 ## Instructions
 
@@ -45,20 +45,20 @@ terraform apply -var-file ../../config/juju-bootstrap/config.tfvars -auto-approv
 terraform output -raw juju_cloud
 ```
 
-### Deploy charmed MAAS with maas-setup Terraform
+### Deploy charmed MAAS with maas-deploy Terraform
 
 ```bash
 # copy sample config and modify the contents as needed
 # NOTE: at least set the juju_cloud from the output of the previous module
-cp config/maas-setup/config.tfvars.sample config/maas-setup/config.tfvars
+cp config/maas-deploy/config.tfvars.sample config/maas-deploy/config.tfvars
 
-cd modules/maas-setup
+cd modules/maas-deploy
 terraform init
 
 # Get a Terraform plan for sanity check
-terraform plan -var-file ../../config/maas-setup/config.tfvars
+terraform plan -var-file ../../config/maas-deploy/config.tfvars
 # Apply Terraform plan
-terraform apply -var-file ../../config/maas-setup/config.tfvars -auto-approve
+terraform apply -var-file ../../config/maas-deploy/config.tfvars -auto-approve
 
 # record maas_api_url, maas_api_key, maas_machines
 # maas_machines is a list of hostnames for juju machines that are hosting maas-region, maas-agent units.
@@ -97,23 +97,23 @@ Despite the issues there is a way to achieve the MAAS HA region+rack by doing th
 2. Then, apply with non-HA region and without rack mode in `-var` to override the values of the configuration files:
 
     ```bash
-    terraform apply -var-file ../../config/maas-setup/config.tfvars -auto-approve -var enable_maas_ha=false -var enable_rack_mode=false
+    terraform apply -var-file ../../config/maas-deploy/config.tfvars -auto-approve -var enable_maas_ha=false -var enable_rack_mode=false
     ```
 
 3. Then apply again by removing `-var enable_maas_ha=false`, to allow MAAS HA being configured. This will expand maas-region units to 3.
 
     ```bash
-    terraform apply -var-file ../../config/maas-setup/config.tfvars -auto-approve -var enable_rack_mode=false
+    terraform apply -var-file ../../config/maas-deploy/config.tfvars -auto-approve -var enable_rack_mode=false
     ```
 
 4. The apply again by removing `-var enable_rack_mode=false`, so that rack mode is configured. This will install a maas-agent charm unit on the same machines as maas-region units. So it will set MAAS snap in `region+rack` mode.
 
     ```bash
-    terraform apply -var-file ../../config/maas-setup/config.tfvars -auto-approve
+    terraform apply -var-file ../../config/maas-deploy/config.tfvars -auto-approve
     ```
 
 > [!NOTE]
-> To run MAAS and/or Postgres in HA mode, the default memory constraints require your host to have at least 32GB RAM. If you wish to reduce this, adjust the VM constraints variables in your `maas-setup/config.tfvars` file.
+> To run MAAS and/or Postgres in HA mode, the default memory constraints require your host to have at least 32GB RAM. If you wish to reduce this, adjust the VM constraints variables in your `maas-deploy/config.tfvars` file.
 
 ##### Troubleshooting HA mode
 
@@ -186,6 +186,7 @@ It is recommended to create a jumphost / bastion LXD container on the LXD cluste
 
 > [!NOTE]
 > If you are on a corporate laptop, you may encounter a timeout error when attempting to bootstrap the JuJu controller:
+>
 > ```bash
 > ❯ juju bootstrap localhost another-cloud
 > Creating Juju controller "another-cloud" on localhost/localhost
@@ -200,4 +201,5 @@ It is recommended to create a jumphost / bastion LXD container on the LXD cluste
 > Attempting to connect to [fd42:9449:3029:99ca:216:3eff:fea4:f64d]:22
 > <will eventually timeout>
 > ```
+>
 > For now, creating a new user and running the setup there fixes this issue. We are still investigating why this occurs.
