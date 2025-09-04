@@ -1,138 +1,22 @@
-# How to backup and restore charmed MAAS
+# How to restore charmed MAAS
+This is a guide on how to restore from an existing charmed MAAS backup as detailed in [how_to_backup.md](how_to_backup.md).
 
-This document describes how to backup and restore charmed MAAS to and from an S3 compatible storage bucket for HA deployments (3x `maas-region` and 3x `postgresql` units) and non-HA deployments (1x `maas-region` and 1x `postgresql` units).
-
-This guide includes the backup and restore instructions for both the PostgreSQL database, which stores the majority of the MAAS state, and also additional files stored on disk in the regions. Running backups for both these two applications are required to backup charmed MAAS.
-
-### Prerequisites
-- You need an S3-compatible storage solution with credentials.
-- The `maas-deploy` module must be run with backup enabled. In your config.tfvars file, set `enable_backup=true` and provide your S3 parameters. This module will deploy the following:
-  - For HA deployments: 3 units each of `maas-region` and `postgresql`.
-  - For non-HA deployments: 1 unit each of `maas-region` and `postgresql`.
-  - In both HA and non-HA deployments, two `s3-integrator` units, one integrated with `maas-region` and the other with `postgresql`.
-
-  For detailed instructions on how to do this, refer to [README.md](./README.md).
-- You should have basic knowledge about Juju and charms, including:
-  - Running actions.
-  - Viewing your juju status and debug-log.
-  - Understanding relations.
-
+> [!Note]
+> This backup and restore functionality is in an early release phase. We recommend testing these workflows in a non-production environment first to verify they meet your specific requirements before implementing in production.
+>
 ### Before you begin
 It's important to understand the following:
 - The restore process outlined in this document is for a fresh install of MAAS and PostgreSQL.
 - When restoring, deploy the same MAAS and PostgreSQL channel versions that were used to create the backup. You can see the version of the maas-region charm used for a particular backup in `mybucket/mypath/backup/<backup-id>/backup_metadata.json`, and the version of PostgreSQL used in `mybucket/mypath/backup/<stanza-name>/backup.info`.
 
-> [!Note]
-> This backup and restore functionality is in an early release phase. We recommend testing this workflow in a non-production environment first to verify it meets your specific requirements before implementing in production.
-
-## Create backup
-Creating a backup of charmed MAAS requires two separate backups: the backup of maas-region cluster, and the backup of the PostgreSQL database.
-
-The entities outside the database that are backed up are:
-- MAAS OS Images.
-- [Curtin preseeds](https://canonical.com/maas/docs/about-machine-customization#p-17465-pre-seeding), on the leader region unit.
-- Region controller system ids.
-
-### Backup PostgreSQL
-1. Note the PostgreSQL secrets required to access the database after a restore:
-   1. Show the relevant secret id to reveal by running:
-       ```bash
-       juju secrets --owner=application-postgresql --format json | jq -r 'map_values(select(.label == "database-peers.postgresql.app"))|keys[]'
-       ```
-       ```output
-       d2on5mo6jk5c44b94o2g  # example secret id
-       ```
-   1. Reveal the secret and store the fields `monitoring-password`, `operator-password`, `replication-password`, and `rewind-password` securely for the restore:
-       ```bash
-       juju show-secret <id> --reveal
-       ```
-       ```output
-       d2on5mo6jk5c44b94o2g:
-         revision: 1
-         checksum: 79f3bb1ae968df97ad94af10ef0551d16da6e144b3473e3ca84fc4d53adbfed4
-         owner: postgresql
-         label: database-peers.postgresql.app
-         created: 2025-08-14T09:07:55Z
-         updated: 2025-08-14T09:07:55Z
-         content:
-           ...
-
-           monitoring-password: <password-to-copy>
-           operator-password: <password-to-copy>
-           patroni-password: ...
-           raft-password: ...
-           replication-password: <password-to-copy>
-           rewind-password: <password-to-copy>
-       ```
-1. Create a full backup of `postgresql`. When PostgreSQL TLS is enabled, run this on a replica unit (non-primary), but when PostgreSQL TLS is not enabled this can only be run on the primary (see the [docs](https://canonical-charmed-postgresql.readthedocs-hosted.com/16/how-to/back-up-and-restore/create-a-backup/#create-a-backup)):
-    ```bash
-    juju run postgresql/1 create-backup --wait 5m
-    ```
-
-   > [!Note]
-   > This creates a full PostgreSQL backup. Differential and incremental types are not supported for restoring charmed MAAS.
-
-### Backup MAAS
-Backup up relevant files on MAAS region controllers outside of the database.
-
-
-1. (Recommended) Ensure all uploaded images have finished syncing across regions.
-1. Run the following to create a backup:
-```bash
-juju run maas-region/leader create-backup --wait 5m
-```
-> [!Note]
-> With a large number of images, you may have to increase the wait time to avoid juju timing out waiting for the action to complete.
-
-## List backups
-List existing MAAS backups present S3. Your MAAS backups and PostgreSQL backups are stored and listed independently.
-
-To view existing backups for `maas-regions` in the specified bucket:
-```bash
-juju run maas-region/leader list-backups
-```
-
-```output
-Running operation 63 with 1 task
-  - task 64 on unit-maas-region-0
-
-Waiting for task 64...
-backups: |-
-  Storage bucket name: mybucket
-  Backups base path: /maas/backup/
-
-  backup-id            | action      | status   | maas     | size       | controllers            | backup-path
-  ------------------------------------------------------------------------------------------------------------
-  2025-09-01T14:13:31Z | full backup | finished | 3.6.1    | 1.8GiB     | 7rtx4b, 7wstba, be7mkk | /maas/backup/2025-09-01T14:13:31Z
-  2025-09-01T16:37:46Z | full backup | finished | 3.6.1    | 766.7MiB   | 7rtx4b, 7wstba, be7mkk | /maas/backup/2025-09-01T16:37:46Z
-
-
-```
-
-To view existing backups for PostgreSQL in the PostgreSQL S3 bucket:
-```
-juju run postgresql/leader list-backups
-```
-```output
-backups: |-
-  Storage bucket name: my-postgresql-bucket
-  Backups base path: /postgresql/backup/
-
-  backup-id            | action              | status   | reference-backup-id  | LSN start/stop          | start-time           | finish-time          | timeline | backup-path
-  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  2025-08-14T10:33:36Z | full backup         | finished | None                 | 0/8000028 / 0/8011558   | 2025-08-14T10:33:36Z | 2025-08-14T10:33:38Z | 1        | /maas.postgresql/20250814-103336F
-
-```
-## Restore
-This is a guide on how to restore from an existing charmed MAAS backup.
-
-#### Prerequisites
+### Prerequisites
 This restoration guide assumes the following:
 
-- The backup steps outlined above were followed for both `maas-region` and `postgresql`.
+- The backup steps outlined in [how_to_backup.md](how_to_backup.md) were followed for both `maas-region` and `postgresql`.
 - You have the PostgreSQL passwords for the chosen backup that were securely stored during the backup process.
 - You have identified the backups IDs for `maas-region` and `postgresql`, using the `list-backups` commands if needed.
 
+## Restore from backup
 The restore process requires deploying a fresh MAAS environment that matches your backup configuration, then restoring PostgreSQL and each region separately.
 
 ### Step 1: Determine your target configuration
@@ -147,7 +31,7 @@ The number of controller IDs in your target backup determines if you need MAAS i
 The restore is always performed with PostgreSQL not in HA mode (`enable_postgres_ha=false`), and scaled up to HA after the restore process if desired.
 
 ### Step 2: Staged deployment of a fresh environment
-Deploy the `maas-deploy` as outlined in [README.md](./README.md) to your target configuration, ensuring both `enable_backup=false` and `enable_postgres_ha=false` regardless of your configuration.
+Deploy the `maas-deploy` as outlined in [README.md](../README.md) to your target configuration, ensuring both `enable_backup=false` and `enable_postgres_ha=false` regardless of your configuration.
 
 When you've deployed your target configuration, re-run your `terraform apply` with `enable_backup=true` to deploy the necessary backup configuration.
 
@@ -192,7 +76,7 @@ Restore your backup data:
    ```bash
    juju integrate postgresql maas-region
    ```
-1. If you would like to run PostgreSQL in HA mode (a total of 3 PostgreSQL units), now you can re-run your `terraform apply` step for the `maas-deploy` module as detailed in [README.md](./README.md) with `enable_postgres_ha=true`, and wait for its completion.
+1. If you would like to run PostgreSQL in HA mode (a total of 3 PostgreSQL units), now you can re-run your `terraform apply` step for the `maas-deploy` module as detailed in [README.md](../README.md) with `enable_postgres_ha=true`, and wait for its completion.
 
    Otherwise, simply re-run the `terraform apply` step for the `maas-deploy` module to ensure your configuration is now managed by Terraform. You should only observe a plan with modifications to the output:
    ```bash
@@ -219,7 +103,7 @@ You should now have a restored MAAS deployment, managed by Terraform.
    ```bash
    juju run maas-region/leader get-api-endpoint
    ```
-2. Verify your restore has been successful by opening the UI, logging in, and check your restored data, including machines, controllers, and OS images, are visible.
+1. Verify your restore has been successful by opening the UI, logging in, and check your restored data, including machines, controllers, and OS images, are visible.
 
 
 ## Troubleshooting
@@ -289,7 +173,3 @@ This is due to custom images not being fully backed up on regions, but they were
    juju integrate maas-region postgresql
    ```
 You should now be able to access MAAS. Re-upload the custom image, if required.
-
-
-### Resources
-- [Charmed PostgreSQL documentation version 16](https://canonical-charmed-postgresql.readthedocs-hosted.com/16/)
