@@ -1,60 +1,100 @@
 ```mermaid
 flowchart TB
-  %% High-level modules
-  TF1[[Module: juju-bootstrap]]
-  TF2[[Module: maas-setup]]
+  %% Styling for different concepts
+  %% classDef tfModule stroke-width:2px
+  %% classDef cloud stroke:#4a148c
+  %% classDef model stroke:#e65100
+  %% classDef machine fill:#f0f0f0,color:#000000
+  classDef unitOptional color:#888888,stroke-dasharray: 5 5
 
-  %% LXD cloud
-  subgraph LXD["LXD-based cloud"]
-    %% Juju controller
-    subgraph CTRL["Juju Controller (<cloud_name>-default)"]
-      JC[(Controller container in LXD)]
+  %% LXD Cloud
+  subgraph CLOUD["☁️ LXD-based cloud"]
+    direction TB
+
+    %% Juju Controller
+    subgraph CTRL["LXD container"]
+      JC["Juju controller"]
     end
 
-    %% MAAS model
+    %% MAAS Model
     subgraph MODEL["Juju model - &quotmaas&quot"]
 
-      %% PostgreSQL application (force horizontal)
-      subgraph PG["Application: postgresql"]
-        direction LR
-        PG0[(postgresql/0 on machine postgres-0)]
-        PG1[(postgresql/1 on machine postgres-1)]
-        PG2[(postgresql/2 on machine postgres-2)]
+      %% MAAS colocated machines
+      subgraph MAAS_MACHINES["MAAS Machines"]
+        subgraph MAAS_M0["machine-3"]
 
+          R0["🟣 maas-region/0"]
+          A0["🟠 maas-agent/0"]
+        end
+        subgraph MAAS_M1["machine-4"]
+
+          R1["🟣 maas-region/1"]
+          A1["🟠 maas-agent/1"]
+        end
+        subgraph MAAS_M2["machine-5"]
+
+          R2["🟣 maas-region/2"]
+          A2["🟠 maas-agent/2"]
+        end
+        %% Force horizontal layout
+        MAAS_M0 ~~~ MAAS_M1 ~~~ MAAS_M2
       end
 
-      %% Machines that host MAAS Region + Agent (colocated)
-      subgraph M0["machine maas-0"]
-        R0[(maas-region/0)]
-        A0[(maas-agent/0)]
+      %% PostgreSQL dedicated machines
+      subgraph PG_MACHINES["PostgreSQL Machines"]
+        subgraph PG_M0["machine-0"]
+          PG0["🔵 postgresql/0<br/>(leader)"]
+        end
+        subgraph PG_M1["machine-1"]
+          PG1["🔵 postgresql/1"]
+        end
+        subgraph PG_M2["machine-2"]
+          PG2["🔵 postgresql/2"]
+        end
+        %% Force horizontal layout
+        PG_M0 ~~~ PG_M1 ~~~ PG_M2
       end
-      subgraph M1["machine maas-1"]
-        R1[(maas-region/1)]
-        A1[(maas-agent/1)]
-      end
-      subgraph M2["machine maas-2"]
-        R2[(maas-region/2)]
-        A2[(maas-agent/2)]
+
+      %% Force vertical group layout
+      MAAS_MACHINES ~~~ PG_MACHINES
+      PG_MACHINES ~~~ BACKUP_M0
+
+      %% Backup machine
+      subgraph BACKUP_M0["machine-7"]
+        S3_PG["🟡 s3-integrator-postgresql/0"]
+        S3_MAAS["🟡 s3-integrator-maas/0"]
       end
     end
   end
 
-  %% Integrations (invisible edges for layout)
-  R0 ~~~ PG
-  R1 ~~~ PG
-  R2 ~~~ PG
-  A0 ~~~ R0
-  A1 ~~~ R1
-  A2 ~~~ R2
+  %% Terraform modules (top level)
+  TF1(["Module: juju-bootstrap"])
+  TF2(["Module: maas-deploy"])
+  TF3(["Module: maas-config"])
 
-  %% External/object storage for images (S3/MinIO/RGW)
-  S3[(S3/object storage for MAAS images)]
-  R0 --- S3
-  PG2 --- S3
+  %% External S3 Storage
+  S3_BUCKET_PG[("S3 Bucket<br/>Path: /postgresql")]
+  S3_BUCKET_MAAS[("S3 Bucket<br/>Path: /maas")]
 
+  %% Application integrations
+  R0 ~~~ A0
+  R1 ~~~ A1
+  R2 ~~~ A2
 
+  %% Terraform module relationships
+  TF1 -.->|creates| CTRL
+  TF2 -.->|creates| MODEL
+  TF3 -.->|configures| MAAS_MACHINES
 
-  %% Module responsibilities
-  TF1 --> CTRL
-  TF2 --> MODEL
+  %% S3 storage connections
+  S3_PG ==> S3_BUCKET_PG
+  S3_MAAS ==>S3_BUCKET_MAAS
+
+  %% Apply styles
+  class CLOUD cloud
+  class MODEL model
+  class TF1,TF2,TF3 tfModule
+  class S3_BUCKET_PG,S3_BUCKET_MAAS storage
+  class PG_M0,PG_M1,PG_M2,MAAS_M0,MAAS_M1,MAAS_M2,BACKUP_M0,CTRL machine
+  class A0,A1,A2,S3_PG,S3_MAAS unitOptional
 ```
