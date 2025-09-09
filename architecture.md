@@ -1,10 +1,10 @@
 ```mermaid
 flowchart TB
-  %% Styling for different concepts
-  %% classDef tfModule stroke-width:2px
-  %% classDef cloud stroke:#4a148c
-  %% classDef model stroke:#e65100
-  %% classDef machine fill:#f0f0f0,color:#000000
+  %% Styling for different concepts (not much right now!)
+  %% classDef tfModule
+  %% classDef cloud
+  %% classDef model
+  %% classDef machine
   classDef unitOptional color:#888888,stroke-dasharray: 5 5
 
   %% LXD Cloud
@@ -91,10 +91,9 @@ flowchart TB
   S3_MAAS ==>S3_BUCKET_MAAS
 
   %% Apply styles
-  class CLOUD cloud
-  class MODEL model
-  class TF1,TF2,TF3 tfModule
-  class S3_BUCKET_PG,S3_BUCKET_MAAS storage
-  class PG_M0,PG_M1,PG_M2,MAAS_M0,MAAS_M1,MAAS_M2,BACKUP_M0,CTRL machine
+  %% class CLOUD cloud
+  %% class MODEL model
+  %% class TF1,TF2,TF3 tfModule
+  %% class PG_M0,PG_M1,PG_M2,MAAS_M0,MAAS_M1,MAAS_M2,BACKUP_M0,CTRL machine
   class A0,A1,A2,S3_PG,S3_MAAS unitOptional
 ```
