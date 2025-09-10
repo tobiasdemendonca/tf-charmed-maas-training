@@ -24,11 +24,11 @@ Check your MAAS backup for controller count:
 ```bash
 juju run maas-region/leader list-backups
 ```
-The number of controller IDs in your target backup determines if you need MAAS in HA mode:
-- 1 controller ID -> non-HA setup (`enable_maas_ha=false`)
-- 3 controller IDs -> HA setup (`enable_maas_ha=true`)
+The number of controller IDs in your target backup determines if you deploy MAAS in a single-node or a multi-node topology:
+- 1 controller ID -> single-node setup (`enable_maas_ha=false`)
+- 3 controller IDs -> multi-node setup (`enable_maas_ha=true`)
 
-The restore is always performed with PostgreSQL not in HA mode (`enable_postgres_ha=false`), and scaled up to HA after the restore process if desired.
+The restore is always performed with PostgreSQL deployed as a single-node (`enable_postgres_ha=false`), and scaled up to multi-node after the restore process if desired.
 
 ### Step 2: Staged deployment of a fresh environment
 Deploy the `maas-deploy` as outlined in [README.md](../README.md) to your target configuration, ensuring both `enable_backup=false` and `enable_postgres_ha=false` regardless of your configuration.
@@ -76,7 +76,7 @@ Restore your backup data:
    ```bash
    juju integrate postgresql maas-region
    ```
-1. If you would like to run PostgreSQL in HA mode (a total of 3 PostgreSQL units), now you can re-run your `terraform apply` step for the `maas-deploy` module as detailed in [README.md](../README.md) with `enable_postgres_ha=true`, and wait for its completion.
+1. If you would like to run PostgreSQL as a multi-node deployment (a total of 3 PostgreSQL units), now you can re-run your `terraform apply` step for the `maas-deploy` module as detailed in [README.md](../README.md) with `enable_postgres_ha=true`, and wait for its completion.
 
    Otherwise, simply re-run the `terraform apply` step for the `maas-deploy` module to ensure your configuration is now managed by Terraform. You should only observe a plan with modifications to the output:
    ```bash
@@ -118,7 +118,7 @@ juju cancel-task <task-id>
 ```
 
 #### Stuck initializing maas database/ unable to delete custom image upon restore
-When restoring, you may run into MAAS being stuck initializing. If you are restoring MAAS in non-HA, you will not be able to access MAAS, or with MAAS in HA you might be able to access some regions that are not stuck initializing.
+When restoring, you may run into MAAS being stuck initializing. If you are restoring MAAS in a single-node topology, you will not be able to access MAAS, or with MAAS in a multi-node topology you might be able to access some regions that are not stuck initializing.
 
 This is due to custom images not being fully backed up on regions, but they were backed up in the database, due to images not being synced across all regions at the time of backup. To resolve this difference, you need to remove the problematic custom image entry from the database before forcing MAAS to re-initialize, as outlined below.
 
