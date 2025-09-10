@@ -3,6 +3,8 @@
 This topology will install three MAAS Region nodes, and three PostgreSQL nodes.
 Deployment occurs in multiple stages, where first a single-node deployment is configured, then scaled out to the full complement of units.
 
+See the [architecture section](../README.md#architecture) of README.md for an overview that includes a description of multi-node deployments.
+
 > [!NOTE]
 > As deployed in these steps, this is not a true HA deployment. You will need to supply an external HA proxy with your MAAS endpoints, for example, for true HA.
 
