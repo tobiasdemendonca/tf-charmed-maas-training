@@ -146,7 +146,7 @@ flowchart TB
   class CTRL bootstrapManaged
   class MODEL deployManaged
 ```
-This diagram describes the system architecture after running the three modules in this repository on a LXD-based cloud. Different `juju-applications` are identified with colored markers (🟡🔵🟠🟣) and optional units are represented with dashed outlines.
+This diagram describes the system architecture of infrastructure deployed by the three terraform modules in this repository, on a LXD-based cloud, for both single and multi-node deploments. Distinct Juju applications are represented with colored markers (🟡🔵🟠🟣) on each unit, and the parts of the architecture that are optional depending on your configuration are represented with dashed outlines.
 
 
 A charmed MAAS deployment consists of the following atomic components:

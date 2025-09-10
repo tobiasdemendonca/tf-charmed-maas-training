@@ -9,8 +9,7 @@ Deployment occurs in multiple stages, where first a single-node deployment is co
 > [!NOTE]
 > part of the reason for one unit -> three units is to avoid [this known issue](https://github.com/canonical/maas-charms/issues/315)
 
-<!-- TODO: Add a diagram for multi-node deployment here. -->
-
+Copy the configuration sample, modifying the entries as required.
 ```bash
 cp config/maas-deploy/config.tfvars.sample config/maas-deploy/config.tfvars
 ```
