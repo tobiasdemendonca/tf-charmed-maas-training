@@ -28,8 +28,8 @@ flowchart TB
     %% MAAS Model
     subgraph MODEL["Juju model - &quotmaas&quot"]
 
-      %% MAAS colocated machines
-      subgraph MAAS_MACHINES["MAAS Machines"]
+      %% MAAS collocated machines
+      subgraph MAAS_MACHINES["MAAS machines"]
          subgraph MAAS_M0["VM-3"]
 
           R0["🟣 maas-region/0"]
@@ -52,7 +52,7 @@ flowchart TB
       end
 
       %% PostgreSQL dedicated machines
-      subgraph PG_MACHINES["PostgreSQL Machines"]
+      subgraph PG_MACHINES["PostgreSQL machines"]
          subgraph PG_M0["VM-0"]
            PG0["🔵 postgresql/0"]
         end
